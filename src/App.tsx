@@ -1,10 +1,11 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard';
-import CodingAssessment from './features/CodingAssessment';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
+import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import Dashboard from "./pages/Dashboard";
+import CodingAssessment from "./features/CodingAssessment";
+import Register from "./pages/Register";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/assessment/:id" element={<CodingAssessment />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </Router>
     </ThemeProvider>

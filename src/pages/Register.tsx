@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Moon, Sun, Mail, Lock, ArrowLeft } from "lucide-react";
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -21,12 +22,12 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Login failed");
+        alert(data.message || "Registration failed");
         return;
       }
 
-      // Successful login - handle redirect
-      window.location.href = "/dashboard";
+      alert("Registration successful! Please login.");
+      navigate("/login");
     } catch (error) {
       alert("Connection error. Please try again.");
     }
@@ -49,13 +50,13 @@ const LoginPage = () => {
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Sign in to your account
+            Create a new account
           </h2>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6" onSubmit={handleRegister}>
               <div>
                 <label
                   htmlFor="email"
@@ -90,7 +91,7 @@ const LoginPage = () => {
                     id="password"
                     name="password"
                     type="password"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -100,62 +101,24 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
-                  >
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-              </div>
-
               <div>
                 <button
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
                 >
-                  Sign in
+                  Register
                 </button>
               </div>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
-                  Google
-                </button>
-                <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
-                  GitHub
-                </button>
-              </div>
+            <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+              >
+                Login
+              </Link>
             </div>
           </div>
         </div>
@@ -167,18 +130,8 @@ const LoginPage = () => {
       >
         {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
       </button>
-
-      <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-        New User?{" "}
-        <Link
-          to="/register"
-          className="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
-        >
-          Signup/Register
-        </Link>
-      </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
