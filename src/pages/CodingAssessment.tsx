@@ -17,13 +17,11 @@ import { useTheme } from "../context/ThemeContext";
 
 // Import Prism core
 import Prism from "prismjs";
-// Import Prism CSS
-import "prismjs/themes/prism.css";
-// Import language components after Prism core
-import "prismjs/components/prism-clike";
-import "prismjs/components/prism-javascript";
-import "prismjs/components/prism-cpp";
+import "prismjs/components/prism-clike"; // base for many C-like languages
+import "prismjs/components/prism-c"; // ✅ required before C++
+import "prismjs/components/prism-cpp"; // depends on `c`
 import "prismjs/components/prism-java";
+import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-rust";
 
