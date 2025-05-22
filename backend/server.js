@@ -85,7 +85,7 @@ app.post("/api/execute", async (req, res) => {
   const { code, language } = req.body;
 
   if (!code || !language) {
-    return res.status(400).json({ message: "Code and language required" });
+    return res.status(400).json({ error: "Code and language are required" });
   }
 
   const tempDir = tmp.dirSync({ unsafeCleanup: true });
@@ -93,12 +93,14 @@ app.post("/api/execute", async (req, res) => {
   const filepath = path.join(tempDir.name, filename);
 
   try {
-    await fs.writeFile(filepath, code);
+    // Create wrapper code for different languages
+    const wrappedCode = wrapCodeForExecution(code, language);
+    await fs.writeFile(filepath, wrappedCode);
 
     const command = getExecutionCommand(language, filepath);
-
     if (!command) {
-      return res.status(400).json({ message: "Unsupported language" });
+      tempDir.removeCallback();
+      return res.status(400).json({ error: "Unsupported language" });
     }
 
     exec(
@@ -108,18 +110,123 @@ app.post("/api/execute", async (req, res) => {
         tempDir.removeCallback(); // Clean up
 
         if (err) {
-          return res.status(400).json({ error: stderr || "Execution error" });
+          console.error("Execution error:", err);
+          return res.status(400).json({
+            error: stderr || err.message || "Execution error",
+            details: err,
+          });
         }
 
-        res.json({ output: stdout });
+        res.json({
+          output: stdout || "Program executed successfully with no output",
+        });
       }
     );
   } catch (error) {
-    console.error("Execution error:", error);
+    console.error("Server error:", error);
     tempDir.removeCallback();
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 });
+
+// Add wrapper function for different languages
+function wrapCodeForExecution(code, language) {
+  switch (language) {
+    case "python":
+      return `
+def main():
+    ${code.replace(/\n/g, "\n    ")}
+
+if __name__ == "__main__":
+    main()
+`;
+    case "javascript":
+      return `
+try {
+    ${code}
+} catch (error) {
+    console.error(error);
+}
+`;
+    case "cpp":
+      return `
+#include <iostream>
+#include <vector>
+using namespace std;
+
+${code}
+
+int main() {
+    Solution solution;
+    vector<int> nums = {2, 7, 11, 15};
+    int target = 9;
+    vector<int> result = solution.twoSum(nums, target);
+    for(int i : result) {
+        cout << i << " ";
+    }
+    cout << endl;
+    return 0;
+}
+`;
+    case "java":
+      return `
+import java.util.*;
+
+public class Main {
+    ${code.replace(/public class Solution \{/, "")}
+
+    public static void main(String[] args) {
+        Solution solution = new Solution();
+        int[] nums = new int[]{2, 7, 11, 15};
+        int target = 9;
+        int[] result = solution.twoSum(nums, target);
+        for(int i : result) {
+            System.out.print(i + " ");
+        }
+        System.out.println();
+    }
+}
+`;
+    case "rust":
+      return `
+fn main() {
+    ${code}
+    let nums = vec![2, 7, 11, 15];
+    let target = 9;
+    let result = two_sum(nums, target);
+    println!("{:?}", result);
+}
+`;
+    default:
+      return code;
+  }
+}
+
+// Update execution commands
+function getExecutionCommand(language, filepath) {
+  const dirname = path.dirname(filepath);
+
+  switch (language) {
+    case "python":
+      return `python3 "${filepath}"`;
+    case "cpp":
+      return `g++ "${filepath}" -o "${path.join(
+        dirname,
+        "main"
+      )}" && "${path.join(dirname, "main")}"`;
+    case "java":
+      return `javac "${filepath}" && java -cp "${dirname}" Main`;
+    case "javascript":
+      return `node "${filepath}"`;
+    case "rust":
+      return `rustc "${filepath}" -o "${path.join(
+        dirname,
+        "main"
+      )}" && "${path.join(dirname, "main")}"`;
+    default:
+      return null;
+  }
+}
 
 // =======================
 // Helper Functions
@@ -141,25 +248,6 @@ function getFilename(language) {
       return "code.js";
     default:
       return "code.txt";
-  }
-}
-
-function getExecutionCommand(language, filepath) {
-  switch (language) {
-    case "python":
-      return `python3 ${filepath}`;
-    case "cpp":
-      return `g++ ${filepath} -o main && ./main`;
-    case "c":
-      return `gcc ${filepath} -o main && ./main`;
-    case "java":
-      return `javac ${filepath} && java -cp ${path.dirname(filepath)} Main`;
-    case "rust":
-      return `rustc ${filepath} -o main && ./main`;
-    case "javascript":
-      return `node ${filepath}`;
-    default:
-      return null;
   }
 }
 
