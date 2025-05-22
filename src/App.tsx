@@ -1,10 +1,9 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
-import CodingAssessment from "./features/CodingAssessment";
+import CodingAssessment from "./pages/CodingAssessment";
 import Register from "./pages/Register";
 
 function App() {
