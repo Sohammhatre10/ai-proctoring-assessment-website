@@ -12,16 +12,25 @@ import {
   Clock,
 } from "lucide-react";
 import Editor from "react-simple-code-editor";
-import { highlight, languages } from "prismjs";
 import Webcam from "react-webcam";
 import { useTheme } from "../context/ThemeContext";
+
+// Import Prism core
+import Prism from "prismjs";
+// Import Prism CSS
+import "prismjs/themes/prism.css";
+// Import language components after Prism core
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
-import "prismjs/components/prism-python";
 import "prismjs/components/prism-cpp";
 import "prismjs/components/prism-java";
+import "prismjs/components/prism-python";
 import "prismjs/components/prism-rust";
-import "prismjs/themes/prism.css";
+
+// Initialize Prism
+if (typeof window !== "undefined") {
+  Prism.manual = true;
+}
 
 type SupportedLanguage = "javascript" | "python" | "cpp" | "java" | "rust";
 
@@ -131,12 +140,17 @@ public:
     { id: 3, input: "nums = [3,3], target = 6", expectedOutput: "[0,1]" },
   ];
 
-  const languageOptions = {
-    javascript: languages.javascript,
-    python: languages.python,
-    cpp: languages.cpp,
-    java: languages.java,
-    rust: languages.rust,
+  const handleHighlight = (code: string) => {
+    try {
+      return Prism.highlight(
+        code,
+        Prism.languages[language] || Prism.languages.plain,
+        language
+      );
+    } catch (error) {
+      console.error("Highlighting error:", error);
+      return code;
+    }
   };
 
   return (
@@ -214,9 +228,7 @@ public:
               <Editor
                 value={code}
                 onValueChange={setCode}
-                highlight={(code) =>
-                  highlight(code, languageOptions[language], language)
-                }
+                highlight={handleHighlight}
                 padding={10}
                 style={{
                   fontFamily: "Fira Code, monospace",
