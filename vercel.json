@@ -9,8 +9,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
-        "buildCommand": "CI= npm run build"
+        "distDir": "build"
       }
     }
   ],
@@ -28,6 +27,7 @@
     }
   ],
   "env": {
-    "CI": "false"
+    "CI": "false",
+    "SKIP_PREFLIGHT_CHECK": "true"
   }
 } 
