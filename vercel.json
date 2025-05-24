@@ -1,8 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "installCommand": "npm install",
   "builds": [
     {
       "src": "backend/server.js",
@@ -13,7 +10,7 @@
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build",
-        "buildCommand": "CI=false npm run build"
+        "buildCommand": "CI= npm run build"
       }
     }
   ],
@@ -29,5 +26,8 @@
       "src": "/(.*)",
       "dest": "build/index.html"
     }
-  ]
+  ],
+  "env": {
+    "CI": "false"
+  }
 } 
