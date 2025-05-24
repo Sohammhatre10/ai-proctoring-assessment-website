@@ -13,11 +13,19 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [/\.vercel\.app$/, /localhost/] // Accept any Vercel subdomain and localhost
+        : "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 // MongoDB Connection
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(process.env.MONGODB_URI || "mongodb+srv://your-mongodb-uri", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     dbName: "login-credentials",
@@ -32,6 +40,19 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model("User", userSchema, "users");
+
+// Proctoring Event Schema
+const proctoringEventSchema = new mongoose.Schema({
+  assessmentId: { type: String, required: true },
+  event: { type: String, required: true },
+  timestamp: { type: Date, required: true },
+  userId: String,
+});
+
+const ProctoringEvent = mongoose.model(
+  "ProctoringEvent",
+  proctoringEventSchema
+);
 
 // =======================
 // Auth Routes
@@ -250,6 +271,34 @@ function getFilename(language) {
       return "code.txt";
   }
 }
+
+// Proctoring Event Route
+app.post("/api/log-proctoring-event", async (req, res) => {
+  try {
+    const { event, timestamp, assessmentId, userId } = req.body;
+
+    const newEvent = new ProctoringEvent({
+      event,
+      timestamp,
+      assessmentId,
+      userId,
+    });
+
+    await newEvent.save();
+    res.status(201).json({ message: "Event logged successfully" });
+  } catch (error) {
+    console.error("Error logging proctoring event:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Health check endpoint for Vercel
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Export for Vercel
+module.exports = app;
 
 // Start Server
 app.listen(PORT, () => {
