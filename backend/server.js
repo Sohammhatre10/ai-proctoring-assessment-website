@@ -15,23 +15,37 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [/\.vercel\.app$/, /localhost/] // Accept any Vercel subdomain and localhost
-        : "http://localhost:3000",
+    origin: "*", // Temporarily allow all origins for debugging
     credentials: true,
   })
 );
 
 // MongoDB Connection
-mongoose
-  .connect(process.env.MONGODB_URI || "mongodb+srv://your-mongodb-uri", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    dbName: "login-credentials",
-  })
-  .then(() => console.log("✅ Connected to MongoDB Atlas"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+let cachedDb = null;
+
+async function connectToDatabase() {
+  if (cachedDb) {
+    return cachedDb;
+  }
+
+  try {
+    const client = await mongoose.connect(
+      process.env.MONGODB_URI || "mongodb+srv://your-mongodb-uri",
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        dbName: "login-credentials",
+      }
+    );
+
+    cachedDb = client;
+    console.log("✅ Connected to MongoDB Atlas");
+    return cachedDb;
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+    throw error;
+  }
+}
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -61,7 +75,9 @@ const ProctoringEvent = mongoose.model(
 // Register Route
 app.post("/api/register", async (req, res) => {
   try {
+    await connectToDatabase();
     const { email, password } = req.body;
+
     if (await User.findOne({ email })) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -82,6 +98,7 @@ app.post("/api/register", async (req, res) => {
 // Login Route
 app.post("/api/login", async (req, res) => {
   try {
+    await connectToDatabase();
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -103,49 +120,54 @@ app.post("/api/login", async (req, res) => {
 // =======================
 
 app.post("/api/execute", async (req, res) => {
-  const { code, language } = req.body;
-
-  if (!code || !language) {
-    return res.status(400).json({ error: "Code and language are required" });
-  }
-
-  const tempDir = tmp.dirSync({ unsafeCleanup: true });
-  const filename = getFilename(language);
-  const filepath = path.join(tempDir.name, filename);
-
   try {
-    // Create wrapper code for different languages
-    const wrappedCode = wrapCodeForExecution(code, language);
-    await fs.writeFile(filepath, wrappedCode);
+    await connectToDatabase();
+    const { code, language } = req.body;
 
-    const command = getExecutionCommand(language, filepath);
-    if (!command) {
-      tempDir.removeCallback();
-      return res.status(400).json({ error: "Unsupported language" });
+    if (!code || !language) {
+      return res.status(400).json({ error: "Code and language are required" });
     }
 
-    exec(
-      command,
-      { cwd: tempDir.name, timeout: 5000 },
-      (err, stdout, stderr) => {
-        tempDir.removeCallback(); // Clean up
+    const tempDir = tmp.dirSync({ unsafeCleanup: true });
+    const filename = getFilename(language);
+    const filepath = path.join(tempDir.name, filename);
 
-        if (err) {
-          console.error("Execution error:", err);
-          return res.status(400).json({
-            error: stderr || err.message || "Execution error",
-            details: err,
+    try {
+      const wrappedCode = wrapCodeForExecution(code, language);
+      await fs.writeFile(filepath, wrappedCode);
+
+      const command = getExecutionCommand(language, filepath);
+      if (!command) {
+        tempDir.removeCallback();
+        return res.status(400).json({ error: "Unsupported language" });
+      }
+
+      exec(
+        command,
+        { cwd: tempDir.name, timeout: 5000 },
+        (err, stdout, stderr) => {
+          tempDir.removeCallback();
+
+          if (err) {
+            console.error("Execution error:", err);
+            return res.status(400).json({
+              error: stderr || err.message || "Execution error",
+              details: err,
+            });
+          }
+
+          res.json({
+            output: stdout || "Program executed successfully with no output",
           });
         }
-
-        res.json({
-          output: stdout || "Program executed successfully with no output",
-        });
-      }
-    );
+      );
+    } catch (error) {
+      console.error("Server error:", error);
+      tempDir.removeCallback();
+      res.status(500).json({ error: "Server error", details: error.message });
+    }
   } catch (error) {
-    console.error("Server error:", error);
-    tempDir.removeCallback();
+    console.error("Database connection error:", error);
     res.status(500).json({ error: "Server error", details: error.message });
   }
 });
@@ -275,6 +297,7 @@ function getFilename(language) {
 // Proctoring Event Route
 app.post("/api/log-proctoring-event", async (req, res) => {
   try {
+    await connectToDatabase();
     const { event, timestamp, assessmentId, userId } = req.body;
 
     const newEvent = new ProctoringEvent({
@@ -293,8 +316,13 @@ app.post("/api/log-proctoring-event", async (req, res) => {
 });
 
 // Health check endpoint for Vercel
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
+app.get("/api/health", async (req, res) => {
+  try {
+    await connectToDatabase();
+    res.json({ status: "ok", message: "Database connected" });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
 });
 
 // Export for Vercel
