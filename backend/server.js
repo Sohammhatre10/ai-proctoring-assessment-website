@@ -20,6 +20,11 @@ app.use(
   })
 );
 
+// Root path handler
+app.get("/", (req, res) => {
+  res.json({ message: "API is running" });
+});
+
 // MongoDB Connection
 let cachedDb = null;
 
@@ -325,7 +330,18 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// Export for Vercel
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something broke!", details: err.message });
+});
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ error: "Not Found", path: req.path });
+});
+
+// Export the Express API
 module.exports = app;
 
 // Start Server
