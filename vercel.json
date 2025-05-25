@@ -2,23 +2,15 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/server.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "dist",
-        "buildCommand": "npm run build"
+        "buildCommand": "npm install --legacy-peer-deps && npm run build"
       }
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/server.js"
-    },
     {
       "handle": "filesystem"
     },
@@ -26,9 +18,5 @@
       "src": "/(.*)",
       "dest": "dist/index.html"
     }
-  ],
-  "env": {
-    "CI": "false",
-    "SKIP_PREFLIGHT_CHECK": "true"
-  }
+  ]
 } 
