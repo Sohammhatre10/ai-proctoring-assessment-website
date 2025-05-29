@@ -17,6 +17,7 @@ import Webcam from "react-webcam";
 import { useTheme } from "../context/ThemeContext";
 import * as faceapi from "@vladmandic/face-api";
 import { API_URL } from "../config";
+import AssessmentComplete from "../components/AssessmentComplete";
 
 // Import Prism core
 import Prism from "prismjs";
@@ -47,6 +48,10 @@ const CodingAssessment: React.FC = () => {
   const [language, setLanguage] = useState<SupportedLanguage>("cpp");
   const [executionResult, setExecutionResult] = useState<string | null>(null);
   const [executionError, setExecutionError] = useState<string | null>(null);
+  const [showComplete, setShowComplete] = useState(false);
+  const [completionReason, setCompletionReason] = useState<
+    "submitted" | "violations"
+  >("submitted");
 
   const [code, setCode] = useState(`class Solution {
 public:
@@ -218,9 +223,13 @@ public:
   };
 
   const handleAutoSubmit = () => {
-    // Add your submission logic here
-    alert("Too many violations detected. Assessment will be auto-submitted.");
-    // You can call your submit function here
+    setCompletionReason("violations");
+    setShowComplete(true);
+  };
+
+  const handleSubmit = () => {
+    setCompletionReason("submitted");
+    setShowComplete(true);
   };
 
   const formatTime = (time: number): string =>
@@ -283,6 +292,12 @@ public:
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      {showComplete && (
+        <AssessmentComplete
+          reason={completionReason}
+          violationCount={suspiciousCount}
+        />
+      )}
       <header className="bg-white dark:bg-gray-800 border-b py-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="bg-cyan-600 w-8 h-8 rounded flex justify-center items-center text-white font-bold">
@@ -392,7 +407,10 @@ public:
             >
               <Play size={16} /> {isRunning ? "Running..." : "Run"}
             </button>
-            <button className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2">
+            <button
+              onClick={handleSubmit}
+              className="bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2"
+            >
               <CheckCircle size={16} /> Submit
             </button>
           </div>
