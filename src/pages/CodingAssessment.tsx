@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   Moon,
@@ -10,10 +10,13 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import Editor from "react-simple-code-editor";
 import Webcam from "react-webcam";
 import { useTheme } from "../context/ThemeContext";
+import * as faceapi from "@vladmandic/face-api";
+import { API_URL } from "../config";
 
 // Import Prism core
 import Prism from "prismjs";
@@ -35,6 +38,15 @@ type SupportedLanguage = "javascript" | "python" | "cpp" | "java" | "rust";
 const CodingAssessment: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { theme, toggleTheme } = useTheme();
+  const webcamRef = useRef<Webcam>(null);
+  const [isModelLoading, setIsModelLoading] = useState(true);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [suspiciousCount, setSuspiciousCount] = useState(0);
+  const [isWebcamEnabled, setIsWebcamEnabled] = useState(false);
+  const [seconds, setSeconds] = useState(1800);
+  const [language, setLanguage] = useState<SupportedLanguage>("cpp");
+  const [executionResult, setExecutionResult] = useState<string | null>(null);
+  const [executionError, setExecutionError] = useState<string | null>(null);
 
   const [code, setCode] = useState(`class Solution {
 public:
@@ -44,11 +56,6 @@ public:
 };`);
   const [isRunning, setIsRunning] = useState(false);
   const [expandedCase, setExpandedCase] = useState<number | null>(null);
-  const [isWebcamEnabled, setIsWebcamEnabled] = useState(false);
-  const [seconds, setSeconds] = useState(1800);
-  const [language, setLanguage] = useState<SupportedLanguage>("cpp");
-  const [executionResult, setExecutionResult] = useState<string | null>(null);
-  const [executionError, setExecutionError] = useState<string | null>(null);
 
   const placeholderCode: Record<string, string> = {
     javascript: `function twoSum(nums, target) {
@@ -93,6 +100,129 @@ public:
     }
   }, [seconds]);
 
+  // Load face-api models
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const MODEL_URL =
+          "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        ]);
+        setIsModelLoading(false);
+        console.log("Face detection models loaded successfully");
+      } catch (error) {
+        console.error("Error loading face detection models:", error);
+      }
+    };
+    loadModels();
+  }, []);
+
+  // Face detection interval
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    const detectFaces = async () => {
+      if (!isWebcamEnabled || !webcamRef.current?.video || isModelLoading)
+        return;
+
+      try {
+        const videoEl = webcamRef.current.video;
+        const canvas = faceapi.createCanvasFromMedia(videoEl);
+        const displaySize = { width: videoEl.width, height: videoEl.height };
+        faceapi.matchDimensions(canvas, displaySize);
+
+        const detections = await faceapi.detectAllFaces(
+          videoEl,
+          new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })
+        );
+
+        const resizedDetections = faceapi.resizeResults(
+          detections,
+          displaySize
+        );
+
+        if (resizedDetections.length === 0) {
+          addWarning("No face detected in frame");
+        } else if (resizedDetections.length > 1) {
+          addWarning("Multiple faces detected");
+        }
+      } catch (error) {
+        console.error("Face detection error:", error);
+      }
+    };
+
+    if (isWebcamEnabled && !isModelLoading) {
+      interval = setInterval(detectFaces, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isWebcamEnabled, isModelLoading]);
+
+  // Tab switching detection
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        addWarning("Tab switching detected");
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Copy-paste prevention
+  useEffect(() => {
+    const preventCopyPaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      addWarning("Copy-paste attempt detected");
+    };
+
+    document.addEventListener("copy", preventCopyPaste);
+    document.addEventListener("paste", preventCopyPaste);
+
+    return () => {
+      document.removeEventListener("copy", preventCopyPaste);
+      document.removeEventListener("paste", preventCopyPaste);
+    };
+  }, []);
+
+  const addWarning = (message: string) => {
+    setWarnings((prev) => [...prev, message]);
+    setSuspiciousCount((prev) => {
+      const newCount = prev + 1;
+      if (newCount >= 3) {
+        handleAutoSubmit();
+      }
+      return newCount;
+    });
+
+    // Log the proctoring event
+    fetch("http://localhost:5000/api/log-proctoring-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: message,
+        timestamp: Date.now(),
+        assessmentId: id,
+      }),
+    }).catch((error) =>
+      console.error("Error logging proctoring event:", error)
+    );
+  };
+
+  const handleAutoSubmit = () => {
+    // Add your submission logic here
+    alert("Too many violations detected. Assessment will be auto-submitted.");
+    // You can call your submit function here
+  };
+
   const formatTime = (time: number): string =>
     `${String(Math.floor(time / 60)).padStart(2, "0")}:${String(
       time % 60
@@ -105,7 +235,7 @@ public:
     setExecutionError(null);
 
     try {
-      const response = await fetch("http://localhost:5000/api/execute", {
+      const response = await fetch(`${API_URL}/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -269,6 +399,48 @@ public:
         </div>
 
         <div className="lg:col-span-4 p-4 flex flex-col gap-4 overflow-y-auto">
+          {/* Warnings Panel */}
+          {warnings.length > 0 && (
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded">
+              <div className="px-4 py-3 border-b border-red-200 dark:border-red-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle
+                      className="text-red-600 dark:text-red-400"
+                      size={16}
+                    />
+                    <h3 className="text-sm font-medium text-red-600 dark:text-red-400">
+                      Proctoring Warnings ({warnings.length})
+                    </h3>
+                  </div>
+                  <div className="text-sm text-red-600 dark:text-red-400">
+                    {3 - suspiciousCount} attempts remaining
+                  </div>
+                </div>
+                {suspiciousCount > 0 && (
+                  <div className="mt-2 w-full bg-red-200 dark:bg-red-800 rounded-full h-1.5">
+                    <div
+                      className="bg-red-600 dark:bg-red-400 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${(suspiciousCount / 3) * 100}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <ul className="text-sm space-y-2">
+                  {warnings.map((warning, index) => (
+                    <li
+                      key={index}
+                      className="text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <span>•</span> {warning}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white dark:bg-gray-800 border rounded">
             <h2 className="px-4 py-3 border-b dark:border-gray-700 text-sm font-medium">
               Test Cases
@@ -323,6 +495,7 @@ public:
             <div className="p-4 h-48 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
               {isWebcamEnabled ? (
                 <Webcam
+                  ref={webcamRef}
                   audio={false}
                   height={160}
                   width={240}

@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ai-proctoring-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: ai-proctoring-backend
+          type: web
+          property: host
+
+  - type: web
+    name: ai-proctoring-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # You'll need to set this in Render dashboard
