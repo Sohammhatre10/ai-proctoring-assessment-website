@@ -209,7 +209,7 @@ public:
     });
 
     // Log the proctoring event
-    fetch("http://localhost:5000/api/log-proctoring-event", {
+    fetch(`${API_URL}/api/log-proctoring-event`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
