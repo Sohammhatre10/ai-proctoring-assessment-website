@@ -11,6 +11,11 @@ const tmp = require("tmp");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Add a basic root route for health checks or initial visits
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "Backend is running" });
+});
+
 // Middleware
 app.use(express.json());
 app.use(
