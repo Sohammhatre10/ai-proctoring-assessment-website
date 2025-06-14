@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import {
   Moon,
   Sun,
@@ -12,44 +12,52 @@ import {
   ChevronRight,
   Search,
   Filter,
-  BarChart2
-} from 'lucide-react';
+  BarChart2,
+} from "lucide-react";
 
 const Dashboard = () => {
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   const upcomingAssessments = [
     {
       id: 1,
-      title: 'Data Structures & Algorithms',
-      date: '2024-03-20',
-      time: '10:00 AM',
-      duration: '2 hours',
-      difficulty: 'Medium'
+      title: "Data Structures & Algorithms",
+      date: "2024-03-20",
+      time: "10:00 AM",
+      duration: "2 hours",
+      difficulty: "Medium",
     },
     {
       id: 2,
-      title: 'Web Development Fundamentals',
-      date: '2024-03-22',
-      time: '2:00 PM',
-      duration: '1.5 hours',
-      difficulty: 'Easy'
+      title: "Web Development Fundamentals",
+      date: "2024-03-22",
+      time: "2:00 PM",
+      duration: "1.5 hours",
+      difficulty: "Easy",
     },
     {
       id: 3,
-      title: 'System Design Interview',
-      date: '2024-03-25',
-      time: '11:00 AM',
-      duration: '3 hours',
-      difficulty: 'Hard'
-    }
+      title: "System Design Interview",
+      date: "2024-03-25",
+      time: "11:00 AM",
+      duration: "3 hours",
+      difficulty: "Hard",
+    },
   ];
 
   const stats = [
-    { label: 'Completed', value: '24', icon: <Award className="w-5 h-5" /> },
-    { label: 'Success Rate', value: '85%', icon: <BarChart2 className="w-5 h-5" /> },
-    { label: 'Hours Practiced', value: '48', icon: <Clock className="w-5 h-5" /> }
+    { label: "Completed", value: "24", icon: <Award className="w-5 h-5" /> },
+    {
+      label: "Success Rate",
+      value: "85%",
+      icon: <BarChart2 className="w-5 h-5" />,
+    },
+    {
+      label: "Hours Practiced",
+      value: "48",
+      icon: <Clock className="w-5 h-5" />,
+    },
   ];
 
   return (
@@ -58,10 +66,10 @@ const Dashboard = () => {
       <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
         <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="w-8 h-8 rounded-md bg-cyan-600 flex items-center justify-center text-white font-bold">
-            CA
+            CV
           </div>
           <span className="ml-2 font-semibold text-lg text-cyan-600 dark:text-cyan-400">
-            CodingAssessment
+            Codevx
           </span>
         </div>
         <nav className="mt-6 px-4">
@@ -113,13 +121,15 @@ const Dashboard = () => {
               className="p-2 rounded-full bg-cyan-100 dark:bg-cyan-800 text-cyan-700 dark:text-cyan-200 
                         hover:bg-cyan-200 dark:hover:bg-cyan-700 transition-colors duration-200"
             >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
             </button>
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-white text-sm font-medium">
                 JD
               </div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">John Doe</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                John Doe
+              </span>
             </div>
           </div>
         </header>
@@ -136,8 +146,12 @@ const Dashboard = () => {
                   {stat.icon}
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {stat.label}
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {stat.value}
+                  </p>
                 </div>
               </div>
             ))}
@@ -147,7 +161,9 @@ const Dashboard = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Upcoming Assessments</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Upcoming Assessments
+                </h2>
                 <button className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                   <Filter className="w-4 h-4 mr-1" />
                   Filter
@@ -156,7 +172,10 @@ const Dashboard = () => {
             </div>
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {upcomingAssessments.map((assessment) => (
-                <div key={assessment.id} className="px-6 py-4 flex items-center justify-between">
+                <div
+                  key={assessment.id}
+                  className="px-6 py-4 flex items-center justify-between"
+                >
                   <div>
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                       {assessment.title}

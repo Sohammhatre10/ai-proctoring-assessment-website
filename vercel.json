@@ -10,6 +10,6 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://ai-proctoring-backend.onrender.com"
+    "VITE_API_URL": "https://ai-proctoring-assessment-website.onrender.com/"
   }
 } 

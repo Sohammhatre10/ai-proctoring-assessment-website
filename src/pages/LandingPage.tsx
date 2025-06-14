@@ -1,7 +1,15 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
-import { Moon, Sun, Code2, Users, Shield, Brain, ChevronRight } from 'lucide-react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
+import {
+  Moon,
+  Sun,
+  Code2,
+  Users,
+  Shield,
+  Brain,
+  ChevronRight,
+} from "lucide-react";
 
 const LandingPage = () => {
   const { theme, toggleTheme } = useTheme();
@@ -9,24 +17,28 @@ const LandingPage = () => {
   const features = [
     {
       icon: <Code2 className="w-6 h-6" />,
-      title: 'Real-time Coding',
-      description: 'Write and test code in multiple programming languages with instant feedback.'
+      title: "Real-time Coding",
+      description:
+        "Write and test code in multiple programming languages with instant feedback.",
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: 'AI Proctoring',
-      description: 'Advanced AI-powered proctoring system to ensure assessment integrity.'
+      title: "AI Proctoring",
+      description:
+        "Advanced AI-powered proctoring system to ensure assessment integrity.",
     },
     {
       icon: <Brain className="w-6 h-6" />,
-      title: 'Smart Analysis',
-      description: 'Detailed performance analytics and personalized improvement suggestions.'
+      title: "Smart Analysis",
+      description:
+        "Detailed performance analytics and personalized improvement suggestions.",
     },
     {
       icon: <Users className="w-6 h-6" />,
-      title: 'Collaborative Learning',
-      description: 'Join a community of learners and share your coding journey.'
-    }
+      title: "Collaborative Learning",
+      description:
+        "Join a community of learners and share your coding journey.",
+    },
   ];
 
   return (
@@ -37,10 +49,10 @@ const LandingPage = () => {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-md bg-cyan-600 flex items-center justify-center text-white font-bold">
-                CA
+                CV
               </div>
               <span className="ml-2 font-semibold text-lg text-cyan-600 dark:text-cyan-400">
-                CodingAssessment
+                Codevx
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -49,7 +61,7 @@ const LandingPage = () => {
                 className="p-2 rounded-full bg-cyan-100 dark:bg-cyan-800 text-cyan-700 dark:text-cyan-200 
                           hover:bg-cyan-200 dark:hover:bg-cyan-700 transition-colors duration-200"
               >
-                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
               </button>
               <Link
                 to="/login"
@@ -68,10 +80,14 @@ const LandingPage = () => {
           <div className="text-center">
             <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
               <span className="block">Master Your Coding Skills</span>
-              <span className="block text-cyan-600 dark:text-cyan-400">With AI-Powered Assessment</span>
+              <span className="block text-cyan-600 dark:text-cyan-400">
+                With AI-Powered Assessment
+              </span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Take your coding skills to the next level with our advanced assessment platform. Practice, learn, and excel in a secure environment.
+              Take your coding skills to the next level with our advanced
+              assessment platform. Practice, learn, and excel in a secure
+              environment.
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
               <div className="rounded-md shadow">
@@ -114,7 +130,7 @@ const LandingPage = () => {
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
-            © 2024 CodingAssessment. All rights reserved.
+            © 2024 Codevx. All rights reserved.
           </div>
         </div>
       </footer>
